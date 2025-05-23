@@ -17,12 +17,14 @@ public class SeatListServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		SeatService sService = new SeatService();
-		List<SeatDTO> seatlist = sService.selectAll();
+		SeatService seatService = new SeatService();
+		List<SeatDTO> seatlist = seatService.selectAll();
+		
+		System.out.println(seatlist);
 		
 		request.setAttribute("seatlist", seatlist);
 		
-		response.sendRedirect("kiosk/seatList.jsp");
+		request.getRequestDispatcher("/kiosk/seatList.jsp").forward(request, response);
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
