@@ -22,6 +22,11 @@ public class SeatService {
 		return DAO.insertSeat(dto);
 	}
 	
+	//3-1.insertSeatBySeatNO
+	public int insertSeatBySeatNo(int dto_no) {
+		return DAO.insertSeatBySeatNo(dto_no);
+	}
+	
 	//4.UPDATE
 	public int updateSeat(SeatDTO dto) {
 		return DAO.updateSeat(dto);

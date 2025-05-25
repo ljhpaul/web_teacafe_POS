@@ -12,9 +12,19 @@ public class MenuService {
 		return DAO.selectAll();
 	}
 	
+	//1-2.selectMenuWithCategory
+	public List<MenuDTO> selectMenuWithCategory() {
+		return DAO.selectMenuWithCategory();
+	}
+	
 	//2.SELECT_DETAIL
 	public MenuDTO selectById(int dto_no) {
 		return DAO.selectById(dto_no);
+	}
+	
+	//2-1.selectByCategory
+	public List<MenuDTO> selectByCategory(int category_id) {
+		return DAO.selectByCategory(category_id);
 	}
 	
 	//3.INSERT

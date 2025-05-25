@@ -20,12 +20,13 @@ public class MenuDAO {
 	int resultCount;	//DML의 영향 받은 건수
 	
 	//static final field ... (SQL Query)
-	static final String SELECT_ALL = "SELECT * FROM menu ";
+	static final String SELECT_ALL = "SELECT * FROM menu ORDER BY menu_no ";
 	static final String SELECT_DETAIL = "SELECT * FROM menu WHERE menu_no = ? ";
-	static final String INSERT = "INSERT INTO menu VALUES( ?, ?, ?, ?, ? )";
+	static final String INSERT = "INSERT INTO menu VALUES( ?, ?, ?, ?, ?, ? )";
 	static final String UPDATE = "UPDATE menu " + 
 			 					 "SET menu_name = ?, " + 
 			 					 "price = ?, " +
+			 					 "category_id = ?, " +
 			 					 "temp = ?, " +
 			 					 "sold_out = ? " +
 			 					 "WHERE menu_no = ?";
@@ -34,11 +35,12 @@ public class MenuDAO {
 	//0.DTO 만들기
 	public MenuDTO makeDTO(ResultSet rs) throws SQLException {
 		MenuDTO dto = MenuDTO.builder()
-				.menu_no(rs.getInt(1))
-				.menu_name(rs.getString(2))
-				.price(rs.getInt(3))
-				.temp(rs.getString(4))
-				.sold_out(rs.getString(5))
+				.menu_no(rs.getInt("menu_no"))
+				.menu_name(rs.getString("menu_name"))
+				.price(rs.getInt("price"))
+				.category_id(rs.getInt("category_id"))
+				.temp(rs.getString("temp"))
+				.sold_out(rs.getString("sold_out"))
 				.build();
 		return dto;
 	}
@@ -64,6 +66,52 @@ public class MenuDAO {
 		return dtolist;
 	}
 	
+	//1-2.selectMenuWithCategory
+	public List<MenuDTO> selectMenuWithCategory() {
+		List<MenuDTO> menuList = new ArrayList<>();
+	    Connection conn = null;
+	    PreparedStatement pst = null;
+	    ResultSet rs = null;
+
+	    String sql = """
+	        SELECT 
+	            m.menu_no, m.menu_name, m.price, m.temp, m.sold_out, 
+	            m.category_id, c.category_name
+	        FROM 
+	            menu m
+	        JOIN 
+	            category c ON m.category_id = c.category_id
+	        ORDER BY 
+	            m.menu_no
+	        """;
+
+	    try {
+	        conn = DBUtil.getConnection();
+	        pst = conn.prepareStatement(sql);
+	        rs = pst.executeQuery();
+
+	        while (rs.next()) {
+	            MenuDTO dto = MenuDTO.builder()
+	                    .menu_no(rs.getInt("menu_no"))
+	                    .menu_name(rs.getString("menu_name"))
+	                    .price(rs.getInt("price"))
+	                    .temp(rs.getString("temp"))
+	                    .sold_out(rs.getString("sold_out"))
+	                    .category_id(rs.getInt("category_id"))
+	                    .category_name(rs.getString("category_name"))  // 추가 필드
+	                    .build();
+	            menuList.add(dto);
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        DBUtil.dbDisconnect(conn, pst, rs);
+	    }
+
+	    return menuList;
+	}
+	
 	//2.SELECT_DETAIL
 	public MenuDTO selectById(int dto_no) {
 		MenuDTO dto = null;
@@ -85,6 +133,33 @@ public class MenuDAO {
 		return dto;
 	}
 	
+	//2-1.selectByCategory
+	public List<MenuDTO> selectByCategory(int category_id) {
+	    List<MenuDTO> menuList = new ArrayList<>();
+	    Connection conn = null;
+	    PreparedStatement pst = null;
+	    ResultSet rs = null;
+
+	    String sql = "SELECT * FROM menu WHERE category_id = ? ORDER BY menu_no";
+
+	    try {
+	        conn = DBUtil.getConnection();
+	        pst = conn.prepareStatement(sql);
+	        pst.setInt(1, category_id);
+	        rs = pst.executeQuery();
+
+	        while (rs.next()) {
+	            menuList.add(makeDTO(rs));
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        DBUtil.dbDisconnect(conn, pst, rs);
+	    }
+
+	    return menuList;
+	}
+	
 	//3.INSERT
 	public int insertMenu(MenuDTO dto) {
 		resultCount = 0;	//삽입 건수 초기화
@@ -95,8 +170,9 @@ public class MenuDAO {
 			pst.setInt(1, dto.getMenu_no());
 			pst.setString(2, dto.getMenu_name());
 			pst.setInt(3, dto.getPrice());
-			pst.setString(4, dto.getTemp());
-			pst.setString(5, dto.getSold_out());
+			pst.setInt(4, dto.getCategory_id());
+			pst.setString(5, dto.getTemp());
+			pst.setString(6, dto.getSold_out());
 			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -116,9 +192,10 @@ public class MenuDAO {
 			pst = conn.prepareStatement(UPDATE);	//통로 뚫기
 			pst.setString(1, dto.getMenu_name());
 			pst.setInt(2, dto.getPrice());
-			pst.setString(3, dto.getTemp());
-			pst.setString(4, dto.getSold_out());
-			pst.setInt(5, dto.getMenu_no());
+			pst.setInt(3, dto.getCategory_id());
+			pst.setString(4, dto.getTemp());
+			pst.setString(5, dto.getSold_out());
+			pst.setInt(6, dto.getMenu_no());
 			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -1,6 +1,4 @@
-package teacafe_POS.model.cart;
-
-import java.sql.Date;
+package teacafe_POS.model.cart_item;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Data
-public class CartDTO {
+public class CartItemDTO {
+	private int cart_item_id;
 	private Integer cart_id;
-	private String session_id;
-	private Integer seat_no;
-	private Date created_at;
+	private Integer menu_no;
+	private Integer unit_price;
+	private String temp;
+	private Integer amount;
 }

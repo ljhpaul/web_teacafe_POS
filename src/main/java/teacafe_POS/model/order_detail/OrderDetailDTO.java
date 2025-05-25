@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class OrderDetailDTO {
-	private Integer order_detail_no;
-	private Integer order_no;
+	private int order_detail_no;
+	private int order_id;
 	private Integer menu_no;
+	private int unit_price;
 	private String order_temp;
-	private Integer order_amount;
+	private int order_amount;
 }

@@ -31,7 +31,7 @@
       <tbody>
       <c:forEach items="${seatlist}" var="seat">
         <tr>
-          <td><a href="${cpath}/cart.jsp?seat_no=${seat.seat_no}">${seat.seat_no}</a></td>
+          <td><a href="${cpath}/viewCart.do?seat_no=${seat.seat_no}">${seat.seat_no}</a></td>
           <td>${seat.getReservation().equals("Y")?"예약됨"
         		   :(seat.getSeated().equals("Y")?"사용중":"사용가능")}</td>
         </tr>

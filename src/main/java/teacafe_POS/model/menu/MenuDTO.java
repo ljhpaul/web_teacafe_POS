@@ -10,9 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class MenuDTO {
-	private Integer menu_no;
+	private int menu_no;
 	private String menu_name;
-	private Integer price;
+	private int price;
+	private Integer category_id;
 	private String temp;
 	private String sold_out;
+	
+	//카테고리명 추가 조회시 사용
+	private String category_name;
 }

@@ -1,19 +1,6 @@
-<%@page import="teacafe_POS.model.order_detail.OrderDetailService"%>
-<%@page import="teacafe_POS.model.order_list.OrderListService"%>
-<%@page import="teacafe_POS.model.cart.CartDTO"%>
-<%@page import="java.util.List"%>
-<%@page import="teacafe_POS.model.cart.CartService"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%
-OrderListService olService = new OrderListService();
-OrderDetailService odService = new OrderDetailService();
-CartService cService = new CartService();
-
-int order_no = olService.getNewOrderNo();
-odService.deleteAllOrderDetail(order_no);
-List<CartDTO> cartlist = cService.viewCart(order_no);
-%>
+<%@ include file="/common/header.jsp" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -21,27 +8,29 @@ List<CartDTO> cartlist = cService.viewCart(order_no);
 <title>Insert title here</title>
 </head>
 <body>
-  <h1><%=order_no%>번 주문 장바구니 목록</h1>
-  <table>
-    <tbody>
-        <%
-        int cnt = 1;
-        for(CartDTO cart : cartlist) {
-            out.print("<tr>");
-        	out.print("<td>" + cnt + "</td>");
-        	out.print("<td>");
-        	out.print(cart.getMenu_name());
-        	out.print("</td>");
-        	out.print("<td>");
-        	out.print(cart.getOrder_temp());
-        	out.print("</td>");
-        	out.print("<td>");
-        	out.print(cart.getOrder_amount());
-        	out.print("</td>");
-            out.print("</tr>");
-        }
-        %>
-    </tbody>
+  <h1>${cart.seat_no}번 테이블 장바구니 목록</h1>
+  <a href="viewMenu.do?cart_id=${cart.cart_id}">메뉴추가</a>
+  <a href="payOrder.do?cart_id=${cart.cart_id}">결제하기</a>
+  <a href="cancelOrder.do?cart_id=${cart.cart_id}">주문취소</a>
+  <hr>
+ <%--  <p>총 금액: ${cart.total_price}</p> --%>
+  <table border="1">
+    <tr>
+      <th>메뉴번호</th>
+      <th>온도</th>
+      <th>수량</th>
+      <th>단가</th>
+      <th>총액</th>
+    </tr>
+    <c:forEach var="item" items="${itemList}">
+    <tr>
+      <td>${item.menu_no}</td>
+      <td>${item.temp}</td>
+      <td>${item.amount}</td>
+      <td>${item.unit_price}</td>
+      <td>${item.unit_price * item.amount}</td>
+    </tr>
+    </c:forEach>
   </table>
 </body>
 </html>

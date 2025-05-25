@@ -100,6 +100,25 @@ public class SeatDAO {
 		
 		return resultCount;
 	}
+	
+	//3-1.insertSeatBySeatNO
+	public int insertSeatBySeatNo(int dto_no) {
+		resultCount = 0;	//삽입 건수 초기화
+		Connection conn = DBUtil.getConnection();	//DB연결
+		
+		try {
+			String sql = "INSERT INTO seat(seat_no) VALUES( ? ) ";
+			pst = conn.prepareStatement(sql);	//통로 뚫기
+			pst.setInt(1, dto_no);
+			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			DBUtil.dbDisconnect(conn, pst, null);
+		}
+		
+		return resultCount;
+	}
 
 	//4.UPDATE
 	public int updateSeat(SeatDTO dto) {

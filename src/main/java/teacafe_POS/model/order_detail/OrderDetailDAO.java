@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.List;
 
 import teacafe_POS.common.util.DBUtil;
 
@@ -19,30 +21,75 @@ public class OrderDetailDAO {
 	//0.DTO 만들기
 	public OrderDetailDTO makeDTO(ResultSet rs) throws SQLException {
 		OrderDetailDTO dto = OrderDetailDTO.builder()
-				.order_detail_no(rs.getInt(1))
-				.order_no(rs.getInt(2))
-				.menu_no(rs.getInt(3))
-				.order_temp(rs.getString(4))
-				.order_amount(rs.getInt(5))
+				.order_detail_no(rs.getInt("order_detail_no"))
+				.order_id(rs.getInt("order_id"))
+				.menu_no(rs.getInt("menu_no"))
+				.unit_price(rs.getInt("unit_price"))
+				.order_temp(rs.getString("order_temp"))
+				.order_amount(rs.getInt("order_amount"))
 				.build();
 		return dto;
 	}
 	
-	//1.insertOrderDetail
-	public int insertOrderDetail(OrderDetailDTO dto) {
+	// 1. 여러 건 insert
+    public int insert(List<OrderDetailDTO> list) {
+        Connection conn = null;
+        PreparedStatement pst = null;
+        int[] results = null;
+
+        String sql = """
+            INSERT INTO order_detail (
+                order_detail_no, order_id, menu_no, 
+                unit_price, order_temp, order_amount ) 
+            VALUES ( order_detail_seq.NEXTVAL, ?, ?, ?, ?, ? )
+            """;
+
+        try {
+            conn = DBUtil.getConnection();
+            pst = conn.prepareStatement(sql);
+
+            for (OrderDetailDTO dto : list) {
+                pst.setInt(1, dto.getOrder_id());
+
+                if (dto.getMenu_no() == null) {
+                    pst.setNull(2, Types.INTEGER);
+                } else {
+                    pst.setInt(2, dto.getMenu_no());
+                }
+
+                pst.setInt(3, dto.getUnit_price());
+                pst.setString(4, dto.getOrder_temp());
+                pst.setInt(5, dto.getOrder_amount());
+
+                pst.addBatch();
+            }
+
+            results = pst.executeBatch();  // 일괄 insert 수행
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.dbDisconnect(conn, pst, null);
+        }
+        
+        // 성공한 건 수의 합을 반환 (results[i] == 1 이면 성공)
+        int total = 0;
+        if (results != null) {
+            for (int r : results) if (r >= 0) total++;
+        }
+        return total;
+    }
+	
+	//2-1.updateAmountById
+	public int updateAmountById(int order_amount, int order_id) {
 		resultCount = 0;	//삽입 건수 초기화
 		Connection conn = DBUtil.getConnection();	//DB연결
 		
 		try {
-			String sql = """
-					insert into order_detail 
-					values( (SELECT NVL(MAX(order_detail_no), 0) + 1 FROM order_detail), ?, ?, ?, ? ) 
-					""";
+			String sql = "update order_detail set order_amount = ? where order_id = ? ";
 			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, dto.getOrder_no());
-			pst.setInt(2, dto.getMenu_no());
-			pst.setString(3, dto.getOrder_temp());
-			pst.setInt(4, dto.getOrder_amount());
+			pst.setInt(1, order_amount);
+			pst.setInt(2, order_id);
 			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -53,15 +100,16 @@ public class OrderDetailDAO {
 		return resultCount;
 	}
 	
-	//2.deleteAllOrderDetail
-	public int deleteAllOrderDetail(int order_no) {
+	//2-2.updateTempById
+	public int updateTempById(String order_temp, int order_id) {
 		resultCount = 0;	//삽입 건수 초기화
 		Connection conn = DBUtil.getConnection();	//DB연결
 		
 		try {
-			String sql = "delete from order_detail where order_no = ? ";
+			String sql = "update order_detail set order_temp = ? where order_id = ? ";
 			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
+			pst.setString(1, order_temp);
+			pst.setInt(2, order_id);
 			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -72,34 +120,15 @@ public class OrderDetailDAO {
 		return resultCount;
 	}
 	
-	//3.updateOrderDetail
-	public int updateOrderAmount(int order_no, int amount) {
+	//3.deleteOrderDetail
+	public int deleteOrderDetail(int order_id) {
 		resultCount = 0;	//삽입 건수 초기화
 		Connection conn = DBUtil.getConnection();	//DB연결
 		
 		try {
-			String sql = "update order_detail set order_amount = ? where order_no = ? ";
+			String sql = "delete from order_detail where order_id = ? ";
 			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
-			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-			
-		return resultCount;
-	}
-	
-	//4.deleteOrderDetail
-	public int deleteOrderDetail(int order_no) {
-		resultCount = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		
-		try {
-			String sql = "delete from order_detail where order_no = ? ";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
+			pst.setInt(1, order_id);
 			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
 		} catch (SQLException e) {
 			e.printStackTrace();

@@ -11,8 +11,9 @@ public class DBUtil {
 	//DB연결
 	public static Connection getConnection() {
 		Connection conn = null;
-		String url = "jdbc:oracle:thin:@192.168.0.184:1521:xe";
-		String userid = "tea";
+//		String url = "jdbc:oracle:thin:@192.168.0.184:1521:xe";
+		String url = "jdbc:oracle:thin:@localhost:1521:xe";
+		String userid = "tea2";
 		String userpass = "1234";
 		
 		try {

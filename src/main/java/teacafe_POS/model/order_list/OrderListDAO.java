@@ -1,10 +1,14 @@
 package teacafe_POS.model.order_list;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import teacafe_POS.common.util.DBUtil;
 
@@ -19,143 +23,113 @@ public class OrderListDAO {
 	
 	//0.DTO 만들기
 	public OrderListDTO makeDTO(ResultSet rs) throws SQLException {
+		int seat = rs.getInt(3);
+		Integer seat_no = rs.wasNull() ? null : seat;	//null처리
+		
+		
 		OrderListDTO dto = OrderListDTO.builder()
-				.order_no(rs.getInt(1))
-				.total_price(rs.getInt(2))
-				.order_date(rs.getDate(3))
-				.seat_no(rs.getInt(4))
+				.order_id(rs.getInt("order_id"))
+				.seat_no(seat_no)
+				.total_price(rs.getInt("total_price"))
+				.order_date(rs.getDate("order_date"))
+				.pay_method(rs.getString("pay_method"))
+				.pay_status(rs.getString("pay_status"))
 				.build();
 		return dto;
 	}
 	
-	//1.getOrderNo
-	public int getNewOrderNo() {
-		int order_no = 0;
-		Connection conn = DBUtil.getConnection();	//DB연결
+	//1.selectAll
+	public List<OrderListDTO> selectAll() {
+		Connection conn = null;
+		Statement st = null;
+		List<OrderListDTO> dtolist = new ArrayList<OrderListDTO>();
+		
+		String sql = "select * from order_list ORDER BY order_id ";
 		
 		try {
-			String sql = "SELECT NVL(MAX(order_no), 0) + 1 from order_list ";
+			conn = DBUtil.getConnection();	//DB연결
 			st = conn.createStatement();	//통로 뚫기
-			rs = st.executeQuery(sql);		//쿼리문 실행 및 결과값 가져오기
-			if(rs.next()) {
-				order_no = rs.getInt(1);
+			ResultSet rs = st.executeQuery(sql);		//쿼리문 실행 및 결과값 가져오기
+			while(rs.next()) {
+				OrderListDTO dto = makeDTO(rs);
+				dtolist.add(dto);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			DBUtil.dbDisconnect(conn, st, rs);
+			DBUtil.dbDisconnect(conn, st, null);
 		}
 		
-		return order_no;
+		return dtolist;
 	}
 	
-	//2.insertNewOrder(order_no)
-	public int insertNewOrder(int order_no) {
-		resultCount = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		try {
-			String sql = "INSERT INTO order_list VALUES( ?, 0, sysdate, null ) ";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
-			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-		
-		return resultCount;
-	}
+    //2. (선택) 단건 조회 by order_id
+    public OrderListDTO selectById(int order_id) {
+        OrderListDTO dto = null;
+        Connection conn = null;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+
+        String sql = "SELECT * FROM order_list WHERE order_id = ?";
+
+        try {
+            conn = DBUtil.getConnection();
+            pst = conn.prepareStatement(sql);
+            pst.setInt(1, order_id);
+            rs = pst.executeQuery();
+
+            if(rs.next()) {
+                dto = makeDTO(rs);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.dbDisconnect(conn, pst, rs);
+        }
+
+        return dto;
+    }
 	
-	//3.clearOrder(order_no)
-	public int clearOrder(int order_no) {
-		resultCount = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		
-		try {
-			String sql = "delete from order_list where order_no = ? ";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
-			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-		
-		return resultCount;
-	}
-	
-	//4.updateOrderSeatNo(order_no, seat_no)
-	public int updateOrderSeatNo(int order_no, int seat_no) {
-		resultCount = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		
-		try {
-			String sql = "update order_list set seat_no = ? where order_no = ? ";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, seat_no);
-			pst.setInt(2, order_no);
-			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-		
-		return resultCount;
-	}
-	
-	//5.updateTotalPrice(order_no)
-	public int updateTotalPrice(int order_no) {
-		resultCount = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		
-		try {
-			String sql = """
-				UPDATE order_list
-				SET total_price = (
-					SELECT NVL(SUM(od.order_amount * m.price), 0)
-					FROM order_detail od
-					JOIN menu m ON od.menu_no = m.menu_no
-					WHERE od.order_no = ?
-				)
-				WHERE order_no = ? 
-				""";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
-			pst.setInt(2, order_no);
-			resultCount = pst.executeUpdate();		//쿼리문 실행 및 결과값 가져오기
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-		
-		return resultCount;
-	}
-	
-	//6.selectTotalPrice(order_no)
-	public int selectTotalPrice(int order_no) {
-		int totalPrice = 0;	//삽입 건수 초기화
-		Connection conn = DBUtil.getConnection();	//DB연결
-		
-		try {
-			String sql = "select total_price from order_list where order_no = ? ";
-			pst = conn.prepareStatement(sql);	//통로 뚫기
-			pst.setInt(1, order_no);
-			rs = pst.executeQuery();		//쿼리문 실행 및 결과값 가져오기
-			if(rs.next()) {
-				totalPrice = rs.getInt(1);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			DBUtil.dbDisconnect(conn, pst, null);
-		}
-		
-		return totalPrice;
-	}
+	//3. 주문 추가 (insert) → 생성된 order_id 반환
+    public int insert(OrderListDTO dto) {
+    	Connection conn = null;
+        CallableStatement cst = null;
+        int order_id = -1;
+
+        String sql = """
+                BEGIN 
+                    INSERT INTO order_list (
+                        order_id, seat_no, total_price, 
+                        order_date, pay_method, pay_status )
+                    VALUES ( order_seq.NEXTVAL, ?, ?, SYSDATE, ?, ? )
+                    RETURNING order_id INTO ?;
+                END;
+                """;
+
+        try {
+        	conn = DBUtil.getConnection();
+            cst = conn.prepareCall(sql);
+
+            if (dto.getSeat_no() == null) {
+                cst.setNull(1, Types.INTEGER);
+            } else {
+                cst.setInt(1, dto.getSeat_no());
+            }
+            cst.setInt(2, dto.getTotal_price());
+            cst.setString(3, dto.getPay_method());
+            cst.setString(4, dto.getPay_status());
+            cst.registerOutParameter(5, Types.INTEGER);
+            cst.execute();
+            order_id = cst.getInt(5);  // 생성된 order_id 반환
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBUtil.dbDisconnect(conn, cst, null);
+        }
+        
+		return order_id;
+    }
 	
 }
 

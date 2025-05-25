@@ -12,8 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 public class OrderListDTO {
-	private Integer order_no;
-	private Integer total_price;
-	private Date order_date;
+	private int order_id;
 	private Integer seat_no;
+	private int total_price;
+	private Date order_date;
+	private String pay_method;
+	private String pay_status;
 }
