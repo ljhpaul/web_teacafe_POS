@@ -32,12 +32,17 @@ public class CartService {
 		return DAO.insertCartAndReturnId(dto);
 	}
 	
-	//4-1.deleteBySessionIdAndSeatNo
+	//4.updateSeatNo
+	public int updateSeatNo(String session_id, Integer seat_no) {
+		return DAO.updateSeatNo(session_id, seat_no);
+	}
+	
+	//5-1.deleteBySessionIdAndSeatNo
 	public int deleteBySessionIdAndSeatNo(String session_id, Integer seat_no) {
 		return DAO.deleteBySessionIdAndSeatNo(session_id, seat_no);
 	}
 	
-	//4-2.deleteCartByCartId
+	//5-2.deleteCartByCartId
 	public int deleteCartByCartId(int cart_id) {
 		return DAO.deleteCartByCartId(cart_id);
 	}

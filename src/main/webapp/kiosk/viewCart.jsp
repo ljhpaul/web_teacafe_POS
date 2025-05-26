@@ -6,6 +6,14 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+<style>
+  table, th, tb {
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align: center;
+  }
+  th, td { padding: 3px; }
+</style>
 </head>
 <body>
   <h1>${cart.seat_no}번 테이블 장바구니 목록</h1>
@@ -14,7 +22,7 @@
   <a href="cancelOrder.do?cart_id=${cart.cart_id}">주문취소</a>
   <hr>
  <%--  <p>총 금액: ${cart.total_price}</p> --%>
-  <table border="1">
+  <table>
     <tr>
       <th>메뉴번호</th>
       <th>온도</th>
@@ -22,7 +30,7 @@
       <th>단가</th>
       <th>총액</th>
     </tr>
-    <c:forEach var="item" items="${itemList}">
+    <c:forEach items="${itemlist}" var="item">
     <tr>
       <td>${item.menu_no}</td>
       <td>${item.temp}</td>

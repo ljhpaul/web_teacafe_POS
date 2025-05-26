@@ -161,7 +161,32 @@ public class CartDAO {
 	    return cart_id;
 	}
 	
-	//4-1.deleteBySessionIdAndSeatNo
+	//4.updateSeatNo
+	public int updateSeatNo(String session_id, Integer seat_no) {
+	    Connection conn = null;
+	    PreparedStatement pst = null;
+	    int result = 0;
+
+	    String sql = "UPDATE cart "
+	    		   + "SET seat_no = ? "
+	               + "WHERE session_id = ? AND seat_no IS NOT NULL";
+
+	    try {
+	        conn = DBUtil.getConnection();
+	        pst = conn.prepareStatement(sql);
+	        pst.setInt(1, seat_no);
+	        pst.setString(2, session_id);
+	        result = pst.executeUpdate();
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        DBUtil.dbDisconnect(conn, pst, null);
+	    }
+
+	    return result;  // 1이면 성공
+	}
+	
+	//5-1.deleteBySessionIdAndSeatNo
 	public int deleteBySessionIdAndSeatNo(String session_id, Integer seat_no) {
 	    Connection conn = null;
 	    PreparedStatement pst = null;
@@ -186,7 +211,7 @@ public class CartDAO {
 	    return result;  // 삭제된 건수 (1 or 0)
 	}
 	
-	//4-2.deleteCartByCartId
+	//5-2.deleteCartByCartId
 	public int deleteCartByCartId(int cart_id) {
 	    Connection conn = null;
 	    PreparedStatement pst = null;
